@@ -8,12 +8,15 @@ import CFGVisualization from "./analysis/CFGVisualization";
 import SimilarityResults from "./analysis/SimilarityResults";
 import ProtocolTimeline from "./analysis/ProtocolTimeline";
 import PipelineStatus from "./analysis/PipelineStatus";
+import AIAssistant from "./AIAssistant";
+import N8nIntegration from "./N8nIntegration";
 
 interface AnalysisDashboardProps {
+  analysisId: string;
   onBack: () => void;
 }
 
-const AnalysisDashboard = ({ onBack }: AnalysisDashboardProps) => {
+const AnalysisDashboard = ({ analysisId, onBack }: AnalysisDashboardProps) => {
   const [pipelineComplete, setPipelineComplete] = useState(false);
 
   useEffect(() => {
@@ -106,6 +109,11 @@ const AnalysisDashboard = ({ onBack }: AnalysisDashboardProps) => {
             <ProtocolTimeline />
           </TabsContent>
         </Tabs>
+
+        <div className="grid lg:grid-cols-2 gap-6 mt-6">
+          <AIAssistant analysisContext={{ analysisId: analysisId }} />
+          <N8nIntegration analysisId={analysisId} />
+        </div>
       </div>
     </div>
   );

@@ -1,1 +1,10 @@
 project_id = "pwthibpwvdawlllhcgks"
+
+[functions.analyze-firmware]
+verify_jwt = true
+
+[functions.ai-crypto-assistant]
+verify_jwt = true
+
+[functions.n8n-webhook]
+verify_jwt = false
