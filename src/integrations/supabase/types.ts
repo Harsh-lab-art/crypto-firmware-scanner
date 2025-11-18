@@ -14,7 +14,148 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      detected_functions: {
+        Row: {
+          address: string
+          analysis_id: string
+          basic_blocks: number | null
+          cfg_complexity: number | null
+          classification: Database["public"]["Enums"]["crypto_type"]
+          confidence: number
+          created_at: string
+          function_name: string
+          id: string
+          instruction_count: number | null
+          is_crypto: boolean
+          similar_library: string | null
+          similarity_score: number | null
+        }
+        Insert: {
+          address: string
+          analysis_id: string
+          basic_blocks?: number | null
+          cfg_complexity?: number | null
+          classification: Database["public"]["Enums"]["crypto_type"]
+          confidence: number
+          created_at?: string
+          function_name: string
+          id?: string
+          instruction_count?: number | null
+          is_crypto?: boolean
+          similar_library?: string | null
+          similarity_score?: number | null
+        }
+        Update: {
+          address?: string
+          analysis_id?: string
+          basic_blocks?: number | null
+          cfg_complexity?: number | null
+          classification?: Database["public"]["Enums"]["crypto_type"]
+          confidence?: number
+          created_at?: string
+          function_name?: string
+          id?: string
+          instruction_count?: number | null
+          is_crypto?: boolean
+          similar_library?: string | null
+          similarity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detected_functions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "firmware_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firmware_analyses: {
+        Row: {
+          analysis_duration: number | null
+          analysis_status: string
+          created_at: string
+          crypto_functions: number | null
+          file_size: number
+          filename: string
+          id: string
+          isa: Database["public"]["Enums"]["isa_type"]
+          total_functions: number | null
+          updated_at: string
+          upload_date: string
+          user_id: string
+        }
+        Insert: {
+          analysis_duration?: number | null
+          analysis_status?: string
+          created_at?: string
+          crypto_functions?: number | null
+          file_size: number
+          filename: string
+          id?: string
+          isa?: Database["public"]["Enums"]["isa_type"]
+          total_functions?: number | null
+          updated_at?: string
+          upload_date?: string
+          user_id: string
+        }
+        Update: {
+          analysis_duration?: number | null
+          analysis_status?: string
+          created_at?: string
+          crypto_functions?: number | null
+          file_size?: number
+          filename?: string
+          id?: string
+          isa?: Database["public"]["Enums"]["isa_type"]
+          total_functions?: number | null
+          updated_at?: string
+          upload_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      protocol_flows: {
+        Row: {
+          analysis_id: string
+          confidence: number
+          created_at: string
+          description: string
+          functions: string[]
+          id: string
+          step_name: string
+          step_number: number
+        }
+        Insert: {
+          analysis_id: string
+          confidence: number
+          created_at?: string
+          description: string
+          functions: string[]
+          id?: string
+          step_name: string
+          step_number: number
+        }
+        Update: {
+          analysis_id?: string
+          confidence?: number
+          created_at?: string
+          description?: string
+          functions?: string[]
+          id?: string
+          step_name?: string
+          step_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_flows_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "firmware_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +164,28 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      crypto_type:
+        | "aes"
+        | "rsa"
+        | "ecc"
+        | "sha"
+        | "md5"
+        | "hmac"
+        | "prng"
+        | "xor"
+        | "des"
+        | "rc4"
+        | "non_crypto"
+        | "unknown"
+      isa_type:
+        | "arm"
+        | "arm64"
+        | "x86"
+        | "x86_64"
+        | "mips"
+        | "riscv"
+        | "avr"
+        | "unknown"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +312,31 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      crypto_type: [
+        "aes",
+        "rsa",
+        "ecc",
+        "sha",
+        "md5",
+        "hmac",
+        "prng",
+        "xor",
+        "des",
+        "rc4",
+        "non_crypto",
+        "unknown",
+      ],
+      isa_type: [
+        "arm",
+        "arm64",
+        "x86",
+        "x86_64",
+        "mips",
+        "riscv",
+        "avr",
+        "unknown",
+      ],
+    },
   },
 } as const
