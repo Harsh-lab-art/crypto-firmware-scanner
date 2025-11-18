@@ -6,28 +6,28 @@ import { Upload, FileCode } from "lucide-react";
 import { toast } from "sonner";
 
 interface UploadSectionProps {
-  onUpload: () => void;
+  onUpload: (file: File, isa: string) => void;
+  isAnalyzing?: boolean;
 }
 
-const UploadSection = ({ onUpload }: UploadSectionProps) => {
+const UploadSection = ({ onUpload, isAnalyzing }: UploadSectionProps) => {
   const [selectedISA, setSelectedISA] = useState("auto");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      toast.success(`Loaded ${file.name}`);
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      toast.success(`Loaded ${selectedFile.name}`);
     }
   };
 
   const handleAnalyze = () => {
-    if (!fileName) {
+    if (!file) {
       toast.error("Please upload a firmware binary first");
       return;
     }
-    toast.success("Starting analysis...");
-    setTimeout(() => onUpload(), 800);
+    onUpload(file, selectedISA);
   };
 
   return (
@@ -72,8 +72,8 @@ const UploadSection = ({ onUpload }: UploadSectionProps) => {
             <label htmlFor="firmware-upload" className="cursor-pointer">
               <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">
-                {fileName ? (
-                  <span className="text-foreground font-medium">{fileName}</span>
+                {file ? (
+                  <span className="text-foreground font-medium">{file.name}</span>
                 ) : (
                   <>Click to upload or drag and drop</>
                 )}
@@ -84,8 +84,8 @@ const UploadSection = ({ onUpload }: UploadSectionProps) => {
             </label>
           </div>
 
-          <Button onClick={handleAnalyze} className="w-full" size="lg">
-            Start Analysis
+          <Button onClick={handleAnalyze} className="w-full" size="lg" disabled={isAnalyzing}>
+            {isAnalyzing ? 'Analyzing...' : 'Start Analysis'}
           </Button>
         </div>
       </Card>
