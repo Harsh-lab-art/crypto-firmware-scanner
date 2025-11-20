@@ -61,14 +61,19 @@ const BlockchainLogger = ({
           description: `Transaction: ${result.transactionHash.slice(0, 10)}...`,
         });
 
-        // Optionally store the transaction hash in the database
-        await supabase
+        // Store the transaction hash in the database
+        const { error: updateError } = await supabase
           .from('firmware_analyses')
           .update({ 
-            // Note: You may need to add a 'blockchain_tx_hash' column via migration
-            // blockchain_tx_hash: result.transactionHash 
+            blockchain_tx_hash: result.transactionHash,
+            blockchain_block_number: result.blockNumber,
+            blockchain_logged_at: new Date().toISOString()
           })
           .eq('id', analysisId);
+
+        if (updateError) {
+          console.error('Error updating analysis with blockchain data:', updateError);
+        }
       }
     } catch (error) {
       console.error('Error logging to blockchain:', error);
