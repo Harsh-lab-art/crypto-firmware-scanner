@@ -10,6 +10,7 @@ import ProtocolTimeline from "./analysis/ProtocolTimeline";
 import PipelineStatus from "./analysis/PipelineStatus";
 import AIAssistant from "./AIAssistant";
 import N8nIntegration from "./N8nIntegration";
+import BlockchainLogger from "./BlockchainLogger";
 
 interface AnalysisDashboardProps {
   analysisId: string;
@@ -113,6 +114,15 @@ const AnalysisDashboard = ({ analysisId, onBack }: AnalysisDashboardProps) => {
         <div className="grid lg:grid-cols-2 gap-6 mt-6">
           <AIAssistant analysisContext={{ analysisId: analysisId }} />
           <N8nIntegration analysisId={analysisId} />
+        </div>
+
+        <div className="mt-6">
+          <BlockchainLogger
+            analysisId={analysisId}
+            filename="firmware_sample.bin"
+            cryptoFunctions={23}
+            totalFunctions={847}
+          />
         </div>
       </div>
     </div>
