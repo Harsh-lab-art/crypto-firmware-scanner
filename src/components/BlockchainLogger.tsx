@@ -29,6 +29,7 @@ const BlockchainLogger = ({
     disconnectWallet,
     logAnalysisToBlockchain,
     getBalance,
+    contractAddress,
   } = useWeb3();
 
   const [balance, setBalance] = useState<string>('0');
@@ -137,9 +138,21 @@ const BlockchainLogger = ({
 
         {!isConnected ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Connect your MetaMask wallet to log firmware analysis data on the blockchain with complete transparency and immutability.
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Connect your MetaMask wallet to log firmware analysis data on the blockchain with complete transparency and immutability.
+              </p>
+              {!contractAddress && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2">
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                    Setup Required
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    Configure smart contract address in settings below to enable blockchain logging
+                  </p>
+                </div>
+              )}
+            </div>
             <Button
               onClick={connectWallet}
               disabled={isConnecting}

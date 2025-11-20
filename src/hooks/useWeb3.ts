@@ -10,13 +10,30 @@ export interface Web3State {
   isConnecting: boolean;
 }
 
-// Simple smart contract ABI for logging analysis data
+// Smart contract ABI for FirmwareAnalysisLogger
 const ANALYSIS_LOGGER_ABI = [
   "function logAnalysis(string memory analysisId, string memory filename, uint256 cryptoFunctions, uint256 totalFunctions) public returns (uint256)",
+  "function updateAnalysis(string memory analysisId, uint256 cryptoFunctions, uint256 totalFunctions) public",
   "function getAnalysisCount(address user) public view returns (uint256)",
   "function getAnalysis(address user, uint256 index) public view returns (string memory analysisId, string memory filename, uint256 cryptoFunctions, uint256 totalFunctions, uint256 timestamp)",
-  "event AnalysisLogged(address indexed user, string analysisId, string filename, uint256 timestamp)"
+  "function getAnalysisById(string memory analysisId) public view returns (string memory filename, uint256 cryptoFunctions, uint256 totalFunctions, uint256 timestamp, address user)",
+  "function getAllUserAnalyses(address user) public view returns (tuple(string analysisId, string filename, uint256 cryptoFunctions, uint256 totalFunctions, uint256 timestamp, address user)[])",
+  "function analysisExists(string memory analysisId) public view returns (bool)",
+  "function totalAnalyses() public view returns (uint256)",
+  "event AnalysisLogged(address indexed user, string indexed analysisId, string filename, uint256 cryptoFunctions, uint256 totalFunctions, uint256 timestamp)",
+  "event AnalysisUpdated(address indexed user, string indexed analysisId, uint256 cryptoFunctions, uint256 totalFunctions, uint256 timestamp)"
 ];
+
+// Get contract address from localStorage or environment variable
+const getContractAddress = (): string | null => {
+  const savedAddress = localStorage.getItem('contractAddress');
+  if (savedAddress) return savedAddress;
+  
+  const envAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+  if (envAddress) return envAddress;
+  
+  return null;
+};
 
 export const useWeb3 = () => {
   const [state, setState] = useState<Web3State>({
@@ -132,66 +149,85 @@ export const useWeb3 = () => {
     analysisId: string,
     filename: string,
     cryptoFunctions: number,
-    totalFunctions: number,
-    contractAddress?: string
+    totalFunctions: number
   ) => {
     if (!state.provider || !state.account) {
       toast.error('Please connect your wallet first');
       return null;
     }
 
+    const contractAddress = getContractAddress();
+    
+    if (!contractAddress) {
+      toast.error('Smart contract not configured. Please set the contract address in settings.');
+      return null;
+    }
+
     try {
-      // If no contract address provided, create a transaction to log data
-      // In production, you'd deploy a smart contract and use its address
       const signer = await state.provider.getSigner();
+      const contract = new Contract(contractAddress, ANALYSIS_LOGGER_ABI, signer);
       
-      if (contractAddress) {
-        // Interact with deployed contract
-        const contract = new Contract(contractAddress, ANALYSIS_LOGGER_ABI, signer);
-        const tx = await contract.logAnalysis(
+      // Check if analysis already exists
+      const exists = await contract.analysisExists(analysisId);
+      
+      let tx;
+      if (exists) {
+        // Update existing analysis
+        tx = await contract.updateAnalysis(
+          analysisId,
+          cryptoFunctions,
+          totalFunctions
+        );
+        toast.info('Updating analysis on blockchain...');
+      } else {
+        // Log new analysis
+        tx = await contract.logAnalysis(
           analysisId,
           filename,
           cryptoFunctions,
           totalFunctions
         );
-        
-        toast.info('Transaction submitted. Waiting for confirmation...');
-        const receipt = await tx.wait();
-        
-        return {
-          transactionHash: receipt.hash,
-          blockNumber: receipt.blockNumber,
-          gasUsed: receipt.gasUsed.toString(),
-        };
-      } else {
-        // Send a simple transaction with data encoded in the transaction
-        const data = JSON.stringify({
-          analysisId,
-          filename,
-          cryptoFunctions,
-          totalFunctions,
-          timestamp: Date.now(),
-        });
-        
-        const tx = await signer.sendTransaction({
-          to: state.account, // Send to self as a data log
-          value: parseEther('0'),
-          data: '0x' + Buffer.from(data).toString('hex'),
-        });
-
-        toast.info('Transaction submitted. Waiting for confirmation...');
-        const receipt = await tx.wait();
-
-        return {
-          transactionHash: receipt?.hash || '',
-          blockNumber: receipt?.blockNumber || 0,
-          gasUsed: receipt?.gasUsed.toString() || '0',
-        };
+        toast.info('Logging analysis to blockchain...');
       }
+      
+      const receipt = await tx.wait();
+      
+      toast.success('Transaction confirmed on blockchain!');
+      
+      return {
+        transactionHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+      };
     } catch (error: any) {
       console.error('Error logging to blockchain:', error);
-      toast.error(error.message || 'Failed to log analysis to blockchain');
+      
+      // Better error messages
+      if (error.code === 'ACTION_REJECTED') {
+        toast.error('Transaction rejected by user');
+      } else if (error.message.includes('insufficient funds')) {
+        toast.error('Insufficient funds for gas fees');
+      } else {
+        toast.error(error.reason || error.message || 'Failed to log analysis to blockchain');
+      }
+      
       return null;
+    }
+  };
+
+  const getContractAnalysisCount = async (): Promise<number> => {
+    if (!state.provider || !state.account) return 0;
+    
+    const contractAddress = getContractAddress();
+    if (!contractAddress) return 0;
+
+    try {
+      const contract = new Contract(contractAddress, ANALYSIS_LOGGER_ABI, state.provider);
+      const count = await contract.getAnalysisCount(state.account);
+      return Number(count);
+    } catch (error) {
+      console.error('Error getting analysis count:', error);
+      return 0;
     }
   };
 
@@ -213,5 +249,7 @@ export const useWeb3 = () => {
     disconnectWallet,
     logAnalysisToBlockchain,
     getBalance,
+    getContractAnalysisCount,
+    contractAddress: getContractAddress(),
   };
 };
