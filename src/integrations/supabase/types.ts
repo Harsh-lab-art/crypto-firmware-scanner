@@ -74,6 +74,9 @@ export type Database = {
         Row: {
           analysis_duration: number | null
           analysis_status: string
+          blockchain_block_number: number | null
+          blockchain_logged_at: string | null
+          blockchain_tx_hash: string | null
           created_at: string
           crypto_functions: number | null
           file_size: number
@@ -88,6 +91,9 @@ export type Database = {
         Insert: {
           analysis_duration?: number | null
           analysis_status?: string
+          blockchain_block_number?: number | null
+          blockchain_logged_at?: string | null
+          blockchain_tx_hash?: string | null
           created_at?: string
           crypto_functions?: number | null
           file_size: number
@@ -102,6 +108,9 @@ export type Database = {
         Update: {
           analysis_duration?: number | null
           analysis_status?: string
+          blockchain_block_number?: number | null
+          blockchain_logged_at?: string | null
+          blockchain_tx_hash?: string | null
           created_at?: string
           crypto_functions?: number | null
           file_size?: number
