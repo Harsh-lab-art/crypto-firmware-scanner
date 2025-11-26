@@ -151,48 +151,86 @@ export const useWeb3 = () => {
     cryptoFunctions: number,
     totalFunctions: number
   ) => {
+    console.log('=== Starting blockchain logging ===');
+    console.log('Analysis ID:', analysisId);
+    console.log('Filename:', filename);
+    console.log('Account:', state.account);
+    console.log('Connected:', state.isConnected);
+    
     if (!state.provider || !state.account) {
       toast.error('Please connect your wallet first');
       return null;
     }
 
     const contractAddress = getContractAddress();
+    console.log('Contract Address:', contractAddress);
     
     if (!contractAddress) {
-      toast.error('Smart contract not configured. Please set the contract address in settings.');
+      toast.error('Smart contract not configured. Please deploy the contract and set the address in settings.');
       return null;
     }
 
     try {
+      console.log('Getting signer...');
       const signer = await state.provider.getSigner();
+      console.log('Signer obtained:', await signer.getAddress());
+      
+      console.log('Creating contract instance...');
       const contract = new Contract(contractAddress, ANALYSIS_LOGGER_ABI, signer);
+      console.log('Contract instance created');
+      
+      // Verify contract exists
+      console.log('Verifying contract code...');
+      const code = await state.provider.getCode(contractAddress);
+      if (code === '0x') {
+        toast.error('No contract found at the specified address. Please verify the contract is deployed.');
+        console.error('No contract code found at address:', contractAddress);
+        return null;
+      }
+      console.log('Contract verified, code length:', code.length);
       
       // Check if analysis already exists
+      console.log('Checking if analysis exists...');
       const exists = await contract.analysisExists(analysisId);
+      console.log('Analysis exists:', exists);
       
       let tx;
       if (exists) {
-        // Update existing analysis
+        console.log('Updating existing analysis...');
+        toast.info('Updating analysis on blockchain...', {
+          description: 'Please confirm the transaction in MetaMask'
+        });
         tx = await contract.updateAnalysis(
           analysisId,
           cryptoFunctions,
           totalFunctions
         );
-        toast.info('Updating analysis on blockchain...');
       } else {
-        // Log new analysis
+        console.log('Logging new analysis...');
+        toast.info('Logging analysis to blockchain...', {
+          description: 'Please confirm the transaction in MetaMask'
+        });
         tx = await contract.logAnalysis(
           analysisId,
           filename,
           cryptoFunctions,
           totalFunctions
         );
-        toast.info('Logging analysis to blockchain...');
       }
       
-      const receipt = await tx.wait();
+      console.log('Transaction sent:', tx.hash);
+      toast.info('Transaction submitted, waiting for confirmation...', {
+        description: `TX: ${tx.hash.slice(0, 10)}...`
+      });
       
-      toast.success('Transaction confirmed on blockchain!');
+      console.log('Waiting for transaction to be mined...');
+      const receipt = await tx.wait();
+      console.log('Transaction mined in block:', receipt.blockNumber);
+      console.log('Gas used:', receipt.gasUsed.toString());
+      
+      toast.success('Transaction confirmed on blockchain!', {
+        description: `Block: ${receipt.blockNumber}`
+      });
       
       return {
         transactionHash: receipt.hash,
@@ -200,13 +238,23 @@ export const useWeb3 = () => {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error: any) {
-      console.error('Error logging to blockchain:', error);
+      console.error('=== Blockchain logging error ===');
+      console.error('Error object:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error reason:', error.reason);
       
       // Better error messages
       if (error.code === 'ACTION_REJECTED') {
         toast.error('Transaction rejected by user');
+      } else if (error.code === 'INVALID_ARGUMENT') {
+        toast.error('Invalid contract address or parameters. Please check settings.');
       } else if (error.message.includes('insufficient funds')) {
         toast.error('Insufficient funds for gas fees');
+      } else if (error.message.includes('network')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else if (error.message.includes('contract')) {
+        toast.error('Contract error. Please verify the contract is deployed correctly.');
       } else {
         toast.error(error.reason || error.message || 'Failed to log analysis to blockchain');
       }
