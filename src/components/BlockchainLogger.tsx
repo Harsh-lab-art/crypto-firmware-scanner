@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Link2, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Wallet, Link2, CheckCircle2, ExternalLink, Loader2, Edit2 } from 'lucide-react';
 import { useWeb3 } from '@/hooks/useWeb3';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { BrowserProvider } from 'ethers';
 
 interface BlockchainLoggerProps {
   analysisId: string;
@@ -36,12 +39,48 @@ const BlockchainLogger = ({
   const [isLogging, setIsLogging] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [blockNumber, setBlockNumber] = useState<number | null>(null);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualAccount, setManualAccount] = useState('');
+  const [manualChainId, setManualChainId] = useState<number | null>(null);
+  const [isLoadingManual, setIsLoadingManual] = useState(false);
 
   useEffect(() => {
-    if (isConnected && account) {
+    if (isConnected && account && !manualMode) {
       getBalance().then(setBalance);
     }
-  }, [isConnected, account, getBalance]);
+  }, [isConnected, account, getBalance, manualMode]);
+
+  const fetchManualAccountDetails = async () => {
+    if (!manualAccount || !manualAccount.match(/^0x[a-fA-F0-9]{40}$/)) {
+      toast.error('Please enter a valid Ethereum address');
+      return;
+    }
+
+    setIsLoadingManual(true);
+    try {
+      if (typeof window.ethereum !== 'undefined') {
+        const provider = new BrowserProvider(window.ethereum);
+        
+        // Get balance
+        const balanceWei = await provider.getBalance(manualAccount);
+        const balanceEth = (Number(balanceWei) / 1e18).toString();
+        setBalance(balanceEth);
+        
+        // Get network
+        const network = await provider.getNetwork();
+        setManualChainId(Number(network.chainId));
+        
+        toast.success('Account details loaded successfully');
+      } else {
+        toast.error('MetaMask not found. Please install MetaMask.');
+      }
+    } catch (error: any) {
+      console.error('Error fetching account details:', error);
+      toast.error('Failed to fetch account details');
+    } finally {
+      setIsLoadingManual(false);
+    }
+  };
 
   const handleLogToBlockchain = async () => {
     setIsLogging(true);
@@ -173,22 +212,92 @@ const BlockchainLogger = ({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Account:</span>
-                <code className="text-xs bg-background px-2 py-1 rounded">
-                  {account?.slice(0, 6)}...{account?.slice(-4)}
-                </code>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Network:</span>
-                <span className="font-medium">{chainId && getChainName(chainId)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Balance:</span>
-                <span className="font-medium">{parseFloat(balance).toFixed(4)} ETH</span>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Account Details</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setManualMode(!manualMode);
+                  if (!manualMode) {
+                    setManualAccount('');
+                    setManualChainId(null);
+                    if (isConnected && account) {
+                      getBalance().then(setBalance);
+                    }
+                  }
+                }}
+              >
+                <Edit2 className="w-3 h-3 mr-1" />
+                {manualMode ? 'Use Wallet' : 'Manual Entry'}
+              </Button>
             </div>
+
+            {manualMode ? (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="manual-account">Account Address</Label>
+                  <Input
+                    id="manual-account"
+                    placeholder="0x..."
+                    value={manualAccount}
+                    onChange={(e) => setManualAccount(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                </div>
+                <Button
+                  onClick={fetchManualAccountDetails}
+                  disabled={isLoadingManual}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {isLoadingManual ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Fetch Account Details'
+                  )}
+                </Button>
+
+                {manualChainId && (
+                  <div className="p-3 bg-muted rounded-lg space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Account:</span>
+                      <code className="text-xs bg-background px-2 py-1 rounded">
+                        {manualAccount?.slice(0, 6)}...{manualAccount?.slice(-4)}
+                      </code>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Network:</span>
+                      <span className="font-medium">{getChainName(manualChainId)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Balance:</span>
+                      <span className="font-medium">{parseFloat(balance).toFixed(4)} ETH</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 bg-muted rounded-lg space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Account:</span>
+                  <code className="text-xs bg-background px-2 py-1 rounded">
+                    {account?.slice(0, 6)}...{account?.slice(-4)}
+                  </code>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Network:</span>
+                  <span className="font-medium">{chainId && getChainName(chainId)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Balance:</span>
+                  <span className="font-medium">{parseFloat(balance).toFixed(4)} ETH</span>
+                </div>
+              </div>
+            )}
 
             {txHash ? (
               <div className="space-y-3">
