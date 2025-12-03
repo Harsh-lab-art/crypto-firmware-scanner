@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Wallet, Link2, CheckCircle2, ExternalLink, Loader2, Edit2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Wallet, Link2, CheckCircle2, ExternalLink, Loader2, Edit2, ChevronDown, ArrowRight, Database, Cpu, FileOutput, Hash, Clock, Info } from 'lucide-react';
 import { useWeb3 } from '@/hooks/useWeb3';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -298,6 +299,126 @@ const BlockchainLogger = ({
                 </div>
               </div>
             )}
+
+            {/* Transparent Workflow Visualization */}
+            <Collapsible className="border border-border rounded-lg">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">How It Works (Transparent Workflow)</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
+                <div className="space-y-4 pt-2">
+                  {/* Input Stage */}
+                  <div className="relative">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
+                        <Database className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-blue-500">1. INPUT DATA</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Data collected from your analysis:</p>
+                        <div className="mt-2 p-2 bg-muted/50 rounded text-xs font-mono space-y-1">
+                          <div><span className="text-muted-foreground">analysisId:</span> {analysisId.slice(0, 8)}...</div>
+                          <div><span className="text-muted-foreground">filename:</span> {filename}</div>
+                          <div><span className="text-muted-foreground">cryptoFunctions:</span> {cryptoFunctions}</div>
+                          <div><span className="text-muted-foreground">totalFunctions:</span> {totalFunctions}</div>
+                          <div><span className="text-muted-foreground">timestamp:</span> {new Date().toISOString()}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute left-4 top-10 w-0.5 h-8 bg-border" />
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center justify-center">
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+
+                  {/* Process Stage */}
+                  <div className="relative">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
+                        <Cpu className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-amber-500">2. PROCESSING</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Smart contract execution steps:</p>
+                        <div className="mt-2 space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Data encoded using ABI (Application Binary Interface)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Transaction signed with your wallet private key</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Sent to smart contract: <code className="bg-muted px-1 rounded">{contractAddress?.slice(0, 10)}...</code></span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Miners validate & include in block</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Event emitted: <code className="bg-muted px-1 rounded">AnalysisLogged</code></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute left-4 top-10 w-0.5 h-8 bg-border" />
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center justify-center">
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+
+                  {/* Output Stage */}
+                  <div className="relative">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-confidence-high/10 rounded-full flex items-center justify-center">
+                        <FileOutput className="w-4 h-4 text-confidence-high" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-confidence-high">3. OUTPUT</h4>
+                        <p className="text-xs text-muted-foreground mt-1">What you receive after confirmation:</p>
+                        <div className="mt-2 space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <Hash className="w-3 h-3 text-muted-foreground" />
+                            <span><strong>Transaction Hash:</strong> Unique identifier for the transaction</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Database className="w-3 h-3 text-muted-foreground" />
+                            <span><strong>Block Number:</strong> The block containing your transaction</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span><strong>Timestamp:</strong> When the data was permanently stored</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
+                            <span><strong>Immutability:</strong> Data cannot be altered or deleted</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gas Fee Info */}
+                  <div className="p-2 bg-primary/5 border border-primary/20 rounded-lg">
+                    <p className="text-xs text-muted-foreground">
+                      <strong className="text-primary">Gas Fee:</strong> A small fee paid to network validators for processing the transaction. 
+                      Current network: <span className="font-medium">{chainId && getChainName(chainId)}</span>
+                    </p>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             {txHash ? (
               <div className="space-y-3">
