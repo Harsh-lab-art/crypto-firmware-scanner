@@ -127,31 +127,52 @@ export type Database = {
       protocol_flows: {
         Row: {
           analysis_id: string
+          authentication_method: string | null
           confidence: number
           created_at: string
           description: string
+          encryption_algorithm: string | null
           functions: string[]
+          handshake_method: string | null
           id: string
+          is_crypto: boolean | null
+          key_exchange: string | null
+          protocol_type: string | null
+          security_level: string | null
           step_name: string
           step_number: number
         }
         Insert: {
           analysis_id: string
+          authentication_method?: string | null
           confidence: number
           created_at?: string
           description: string
+          encryption_algorithm?: string | null
           functions: string[]
+          handshake_method?: string | null
           id?: string
+          is_crypto?: boolean | null
+          key_exchange?: string | null
+          protocol_type?: string | null
+          security_level?: string | null
           step_name: string
           step_number: number
         }
         Update: {
           analysis_id?: string
+          authentication_method?: string | null
           confidence?: number
           created_at?: string
           description?: string
+          encryption_algorithm?: string | null
           functions?: string[]
+          handshake_method?: string | null
           id?: string
+          is_crypto?: boolean | null
+          key_exchange?: string | null
+          protocol_type?: string | null
+          security_level?: string | null
           step_name?: string
           step_number?: number
         }
