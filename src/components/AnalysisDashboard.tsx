@@ -7,6 +7,7 @@ import FunctionTable from "./analysis/FunctionTable";
 import CFGVisualization from "./analysis/CFGVisualization";
 import SimilarityResults from "./analysis/SimilarityResults";
 import ProtocolTimeline from "./analysis/ProtocolTimeline";
+import ProtocolGraph from "./analysis/ProtocolGraph";
 import PipelineStatus from "./analysis/PipelineStatus";
 import AIAssistant from "./AIAssistant";
 import N8nIntegration from "./N8nIntegration";
@@ -108,7 +109,8 @@ const AnalysisDashboard = ({ analysisId, onBack }: AnalysisDashboardProps) => {
             <SimilarityResults />
           </TabsContent>
 
-          <TabsContent value="protocol" className="space-y-4">
+          <TabsContent value="protocol" className="space-y-6">
+            <ProtocolGraph />
             <ProtocolTimeline />
           </TabsContent>
         </Tabs>
